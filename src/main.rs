@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use std::io::Write;
+use {clap::Parser, std::io::Write};
 
 trait WriteExt: Write {
     fn write_char(&mut self, ch: char);
@@ -19,9 +19,23 @@ const FW_LC_OFFSET: u32 = 0xFF41;
 const FW_LC_ADD: u32 = FW_UC_OFFSET - 'A' as u32;
 const FW_UC_ADD: u32 = FW_LC_OFFSET - 'a' as u32;
 
+#[derive(clap::Parser)]
+struct Args {
+    #[clap(long)]
+    file: Option<String>,
+    #[clap(long)]
+    string: Option<String>,
+}
+
 fn main() {
-    let path = std::env::args_os().nth(1).expect("Need path as arg");
-    let input = std::fs::read_to_string(path).unwrap();
+    let args = Args::parse();
+    let input = match args.file {
+        Some(path) => std::fs::read_to_string(path).unwrap(),
+        None => match args.string {
+            Some(s) => s,
+            None => panic!("Ah crap, nothing to convert"),
+        },
+    };
     let out = std::io::stdout();
     let mut out = out.lock();
     for ch in input.chars() {
