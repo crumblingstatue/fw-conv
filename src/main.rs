@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use {clap::Parser, std::io::Write};
+use {clap::Parser, fw_conv::StrExt, std::io::Write};
 
 #[derive(clap::Parser)]
 struct Args {
@@ -21,5 +21,5 @@ fn main() {
     };
     let out = std::io::stdout();
     let mut out = out.lock();
-    out.write_all(fw_conv::sw_to_fw(&input).as_bytes()).unwrap();
+    out.write_all(input.to_fw().as_bytes()).unwrap();
 }
