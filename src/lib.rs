@@ -4,6 +4,12 @@
 
 /// Extension trait for char fullwidth conversion
 pub trait CharExt {
+    /// Is this character fullwidth?
+    #[expect(
+        clippy::wrong_self_convention,
+        reason = "It's fine to take self by value here"
+    )]
+    fn is_fw(self) -> bool;
     /// Convert from standard to full width
     #[must_use]
     fn to_fw(self) -> Self;
@@ -13,6 +19,9 @@ pub trait CharExt {
 }
 
 impl CharExt for char {
+    fn is_fw(self) -> bool {
+        matches!(self, 'Ａ'..='Ｚ' | 'ａ'..='ｚ' | '｜' | '／' | FW_SPACE)
+    }
     fn to_fw(self) -> Self {
         match self {
             'A'..='Z' => char::from_u32(self as u32 + FW_UC_ADD).unwrap(),
@@ -38,6 +47,8 @@ impl CharExt for char {
 
 /// Extension trait for string fullwidth conversion
 pub trait StrExt {
+    /// Whether this string has any fullwidth characters
+    fn has_fw(&self) -> bool;
     /// Convert from standard to full width
     #[must_use]
     fn to_fw(&self) -> String;
@@ -47,6 +58,10 @@ pub trait StrExt {
 }
 
 impl<T: AsRef<str> + ?Sized> StrExt for T {
+    fn has_fw(&self) -> bool {
+        self.as_ref().chars().any(CharExt::is_fw)
+    }
+
     fn to_fw(&self) -> String {
         self.as_ref().chars().map(CharExt::to_fw).collect()
     }
@@ -70,4 +85,12 @@ fn test_sw_to_fw() {
 #[test]
 fn test_fw_to_sw() {
     assert_eq!("ｈｅｌｌｏ　ｗｏｒｌｄ".to_sw(), "hello world");
+}
+
+#[test]
+fn test_has_fw() {
+    assert!(!"hello world".has_fw());
+    assert!("ｈｅｌｌｏ　ｗｏｒｌｄ".has_fw());
+    // Normal looking string with fullwidth space in middle
+    assert!("hello　world".has_fw());
 }
