@@ -46,7 +46,7 @@ pub trait StrExt {
     fn to_sw(&self) -> String;
 }
 
-impl<T: AsRef<str>> StrExt for T {
+impl<T: AsRef<str> + ?Sized> StrExt for T {
     fn to_fw(&self) -> String {
         self.as_ref().chars().map(CharExt::to_fw).collect()
     }
